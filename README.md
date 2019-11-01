@@ -4,6 +4,7 @@ Turns a USB keyboard into a dedicated macro device.
 ## Installing
 
 - Install [hidapi](https://github.com/signal11/hidapi)
+- Clone this repository
 - Build with
 ```
 sudo make install
