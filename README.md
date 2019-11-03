@@ -3,7 +3,7 @@ Turns a USB keyboard into a dedicated macro device.
 
 ## Installing
 
-- Install [hidapi](https://github.com/signal11/hidapi)
+- Install [hidapi](https://github.com/libusb/hidapi)
 - Clone this repository
 - Build with
 ```
