@@ -28,7 +28,7 @@ readKeycodes VID PID
 ```
 To reload the configuration or to create profiles "\load /path/to/configfile" can be used.
 
-### Coniguration example
+### Configuration example
 
 ```
 0	41	mpd
