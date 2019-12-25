@@ -1,5 +1,5 @@
 /*
- * usbMacro.cpp
+ * usbMacro-hidapi.cpp
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,14 @@
 #include <map>
 #include <array>
 
-class usbMacros{
+#include </usr/include/hidapi/hidapi.h>
+
+class usbMacros_hidapi{
 	
 	public:
 	
-	void openKeyboard( int VID, int PID );
+	int openKeyboard( int VID, int PID );
+	int closeKeyboard();
 	int waitForKeypress();    //get keypresses and execute macros
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
@@ -42,7 +45,7 @@ class usbMacros{
 	
 };
 
-int usbMacros::loadMacros( std::string configFile ){
+int usbMacros_hidapi::loadMacros( std::string configFile ){
 	
 	std::ifstream configIn( configFile );
 	
@@ -89,7 +92,7 @@ int usbMacros::loadMacros( std::string configFile ){
 	return 1;
 }
 
-int usbMacros::runMacro( unsigned char keycode, unsigned char modifiers ){
+int usbMacros_hidapi::runMacro( unsigned char keycode, unsigned char modifiers ){
 	std::array<unsigned char, 2> key = {keycode, modifiers};
 	std::size_t position = 0;
 	std::string macroCommand;
@@ -114,7 +117,7 @@ int usbMacros::runMacro( unsigned char keycode, unsigned char modifiers ){
 	return 0;
 }
 
-int usbMacros::waitForKeypress(){
+int usbMacros_hidapi::waitForKeypress(){
 	unsigned char buffer[65];
 	unsigned char res, key_old=0, key_new=0;
 	
@@ -138,6 +141,12 @@ int usbMacros::waitForKeypress(){
 	return 0;
 }
 
-void usbMacros::openKeyboard( int VID, int PID ){
+int usbMacros_hidapi::openKeyboard( int VID, int PID ){
 	keyboardDevice = hid_open( VID, PID, NULL );
+	return 0;
+}
+
+int usbMacros_hidapi::closeKeyboard(){
+	
+	return 0;
 }
