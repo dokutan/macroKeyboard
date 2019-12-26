@@ -1,5 +1,5 @@
 /*
- * usbMacro.cpp
+ * usbMacro-libusb.cpp
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,25 +24,29 @@
 #include <map>
 #include <array>
 
-class usbMacros{
+#include <libusb-1.0/libusb.h>
+
+class usbMacros_libusb{
 	
 	public:
 	
-	void openKeyboard( int VID, int PID );
+	int openKeyboard( int VID, int PID );
+	int closeKeyboard();
 	int waitForKeypress();    //get keypresses and execute macros
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
 	
 	private:
 	
-	hid_device *keyboardDevice;
+	libusb_device_handle *keyboardDevice = NULL;
+	bool _detached_driver_0 = false;
 	
 	//store macros
 	std::map< std::array<unsigned char, 2>, std::string > macros;
 	
 };
 
-int usbMacros::loadMacros( std::string configFile ){
+int usbMacros_libusb::loadMacros( std::string configFile ){
 	
 	std::ifstream configIn( configFile );
 	
@@ -89,7 +93,7 @@ int usbMacros::loadMacros( std::string configFile ){
 	return 1;
 }
 
-int usbMacros::runMacro( unsigned char keycode, unsigned char modifiers ){
+int usbMacros_libusb::runMacro( unsigned char keycode, unsigned char modifiers ){
 	std::array<unsigned char, 2> key = {keycode, modifiers};
 	std::size_t position = 0;
 	std::string macroCommand;
@@ -105,6 +109,9 @@ int usbMacros::runMacro( unsigned char keycode, unsigned char modifiers ){
 		if( macroCommand.find("\\load") == 0 ){
 			//std::cout << macroCommand;
 			loadMacros( macroCommand.substr(6) );
+		} else if( macroCommand.find("\\quit") == 0 ){
+			closeKeyboard();
+			exit(0);
 		} else{
 			system( macroCommand.c_str() );
 		}
@@ -114,30 +121,77 @@ int usbMacros::runMacro( unsigned char keycode, unsigned char modifiers ){
 	return 0;
 }
 
-int usbMacros::waitForKeypress(){
-	unsigned char buffer[65];
-	unsigned char res, key_old=0, key_new=0;
+int usbMacros_libusb::waitForKeypress(){
+	uint8_t buffer[8];
+	unsigned char key_old=0, key_new=0;
+	int transferred;
+		
+	//read from endpoint 1
+	libusb_interrupt_transfer( keyboardDevice, 0x81, buffer, 8, &transferred, -1);;
 	
-	while( 1 ){
-		
-		//request keyboard state
-		buffer[1] = 0x81;
-		hid_write(keyboardDevice, buffer, 65);
-
-		//read requested state
-		res = hid_read(keyboardDevice, buffer, 65);
-		
-		key_old = key_new;
-		key_new = buffer[2];
-		
-		if( key_old == 0 && key_new != 0 ){
-			runMacro( buffer[0], key_new );
-		}
+	key_old = key_new;
+	key_new = buffer[2];
+	
+	if( key_old == 0 && key_new != 0 ){
+		runMacro( buffer[0], buffer[2] );
+		//std::cout << (int)buffer[0] << "\t" << (int)buffer[2] << "\n";
 	}
+	
 	
 	return 0;
 }
 
-void usbMacros::openKeyboard( int VID, int PID ){
-	keyboardDevice = hid_open( VID, PID, NULL );
+//init libusb and open keyboard
+int usbMacros_libusb::openKeyboard( int VID, int PID ){
+	
+	//vars
+	int res = 0;
+	
+	//libusb init
+	res = libusb_init( NULL );
+	if( res < 0 ){
+		return res;
+	}
+	
+	//open device
+	keyboardDevice = libusb_open_device_with_vid_pid( NULL, VID, PID );
+	if( !keyboardDevice ){
+		return res;
+	}
+	
+	//detach kernel driver on interface 0 if active 
+	if( libusb_kernel_driver_active( keyboardDevice, 0 ) ){
+		res += libusb_detach_kernel_driver( keyboardDevice, 0 );
+		if( res == 0 ){
+			_detached_driver_0 = true;
+		} else{
+			return res;
+		}
+	}
+	
+	//claim interface 0
+	res += libusb_claim_interface( keyboardDevice, 0 );
+	if( res != 0 ){
+		return res;
+	}
+	
+	return res;
 }
+
+//close keyboard
+int usbMacros_libusb::closeKeyboard(){
+	
+	//release interface 0 and 1
+	libusb_release_interface( keyboardDevice, 0 );
+	
+	//attach kernel driver for interface 0
+	if( _detached_driver_0 ){
+		libusb_attach_kernel_driver( keyboardDevice, 0 );
+	}
+	
+	//exit libusb
+	libusb_exit( NULL );
+	
+	return 0;
+}
+
