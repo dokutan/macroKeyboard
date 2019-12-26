@@ -18,9 +18,10 @@
  * 
  */
 
-// enable backends
+// enable backends, comment out the following lines to disable backends
 #define USE_BACKEND_HIDAPI
 #define USE_BACKEND_LIBUSB
+// enable backends end
 
 #include <iostream>
 #include <string>
@@ -34,12 +35,14 @@
 #endif
 #include "usbMacro-placebo.cpp"
 
-// g++ macroKeyboard.cpp -o macroKeyboard -lhidapi-libusb
+// compile with:
+// g++ macroKeyboard.cpp -o macroKeyboard -lhidapi-libusb -lusb-1.0
 
 // run as root (don't do this)
 // or add udev rule (do this)
 
-// 
+
+// main part
 template<class T> int run_main( T keyboard, char *VID, char *PID, char *macrofile ){
 	
 	// load config

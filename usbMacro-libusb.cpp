@@ -123,11 +123,11 @@ int usbMacros_libusb::runMacro( unsigned char keycode, unsigned char modifiers )
 
 int usbMacros_libusb::waitForKeypress(){
 	uint8_t buffer[8];
-	unsigned char res, key_old=0, key_new=0;
+	unsigned char key_old=0, key_new=0;
 	int transferred;
 		
 	//read from endpoint 1
-	res += libusb_interrupt_transfer( keyboardDevice, 0x81, buffer, 8, &transferred, -1);;
+	libusb_interrupt_transfer( keyboardDevice, 0x81, buffer, 8, &transferred, -1);;
 	
 	key_old = key_new;
 	key_new = buffer[2];

@@ -119,7 +119,7 @@ int usbMacros_hidapi::runMacro( unsigned char keycode, unsigned char modifiers )
 
 int usbMacros_hidapi::waitForKeypress(){
 	unsigned char buffer[65];
-	unsigned char res, key_old=0, key_new=0;
+	unsigned char key_old=0, key_new=0;
 	
 	while( 1 ){
 		
@@ -128,7 +128,7 @@ int usbMacros_hidapi::waitForKeypress(){
 		hid_write(keyboardDevice, buffer, 65);
 
 		//read requested state
-		res = hid_read(keyboardDevice, buffer, 65);
+		hid_read(keyboardDevice, buffer, 65);
 		
 		key_old = key_new;
 		key_new = buffer[2];
