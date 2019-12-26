@@ -25,9 +25,7 @@ Currently three backends with slightly different features are available. To disa
 Backend | Dependencies | Notes
 ---|---|---
 hidapi | [hidapi](https://github.com/libusb/hidapi) | does not support "\quit", see Bugs
----|---|---
 libusb | [libusb](https://github.com/libusb/libusb) | supports "\quit"
----|---|---
 placebo | none | does nothing, only intended for debugging
 
 ## Usage
