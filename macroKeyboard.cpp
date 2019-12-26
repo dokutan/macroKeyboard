@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 // include backends
 #ifdef USE_BACKEND_LIBUSB
@@ -41,9 +42,20 @@
 // run as root (don't do this)
 // or add udev rule (do this)
 
+// print help message
+void print_help(){
+	std::cout << "macroKeyboard usage:\n\n";
+	std::cout << "Required arguments:\n";
+	std::cout << "\t-p=arg\tKeyboard PID\n";
+	std::cout << "\t-v=arg\tKeyboard VID\n";
+	std::cout << "\t-m=arg\tMacrofile\n";
+	std::cout << "\t-b=arg\tBackend\n\n";
+	std::cout << "Optional arguments:\n";
+	std::cout << "\t-h\tShow this message\n";
+}
 
 // main part
-template<class T> int run_main( T keyboard, char *VID, char *PID, char *macrofile ){
+template<class T> int run_main( T keyboard, std::string VID, std::string PID, std::string macrofile ){
 	
 	// load config
 	if( keyboard.loadMacros( macrofile ) != 0 ){
@@ -61,40 +73,68 @@ template<class T> int run_main( T keyboard, char *VID, char *PID, char *macrofil
 
 int main(int argc, char* argv[])
 {
-	// check args
-	if( argc <= 3 ){
-		std::cout << "Usage: macroKeyboard VID PID macrofile backend\n";
+	
+	// parse commandline options
+	int c;
+	std::string vid = "", pid = "", macrofile = "", backend = "";
+	
+	while( ( c = getopt( argc, argv, "p:v:m:b:h") ) != -1 ){
+		
+		switch(c){
+			case 'p':
+				pid = optarg;
+				break;
+			case 'v':
+				vid = optarg;
+				break;
+			case 'm':
+				macrofile = optarg;
+				break;
+			case 'b':
+				backend = optarg;
+				break;
+			case 'h':
+				print_help();
+				return 0;
+				break;
+			default:
+				break;
+		}
+		
+	}
+	
+	if( vid == "" || pid == "" || macrofile == "" || backend == "" ){
+		std::cout << "Required arguments missing\n";
 		return 0;
 	}
 	
 	// determine backend, select correct main class
 	if( argc >= 5 ){
-		std::string backend = argv[4];
 		
 		if( backend == "libusb" ){
 			
 			#ifdef USE_BACKEND_LIBUSB
 			std::cout << "Using libusb backend\n";
-			run_main<usbMacros_libusb>( usbMacros_libusb(), argv[1], argv[2], argv[3] );
+			run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile );
 			#else
 			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), argv[1], argv[2], argv[3] );
+			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile );
 			#endif
 			
 		} else if( backend == "hidapi" ){
 			
 			#ifdef USE_BACKEND_HIDAPI
 			std::cout << "Using hidapi backend\n";
-			run_main<usbMacros_hidapi>( usbMacros_hidapi(), argv[1], argv[2], argv[3] );
+			run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile );
 			#else
 			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), argv[1], argv[2], argv[3] );
+			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile );
 			#endif
 			
 		} else{
 			
 			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), argv[1], argv[2], argv[3] );
+			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile );
 			
 		}
 	}

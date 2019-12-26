@@ -53,12 +53,13 @@ To reload the configuration or to create profiles "\load /path/to/configfile" ca
 WARNING: The specified keyboard can not be used for input while this program is running, so make sure you have a second keyboard attached.
 Start the program with:
 ```
-macroKeyboard VID PID macrofile backend
+macroKeyboard -v VID -p PID -m macrofile -b backend
 ```
 
 ## Bugs and TODO
 
 - Only for the hidapi backend: after this program terminates the keyboard that was opened needs to unplugged and plugged back in for it to work again as a normal keyboard. This is a limitation of the library and I don't intend to fix this, as the libusb backend does not have this limitation.
 
-- [ ] Improve commandline parsing
+- [x] Improve commandline parsing
+- [ ] Add readKeycodes functionality into main program
 - [ ] Add option to quit after a single macro has been executed
