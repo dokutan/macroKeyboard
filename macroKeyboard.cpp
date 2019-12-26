@@ -18,9 +18,11 @@
  * 
  */
 
-// enable backends, comment out the following lines to disable backends
-#define USE_BACKEND_HIDAPI
-#define USE_BACKEND_LIBUSB
+// enable backends
+// these defines are moved to the makefile, so use uncomment them to
+// enable backends when not using the makefile
+//#define USE_BACKEND_HIDAPI
+//#define USE_BACKEND_LIBUSB
 // enable backends end
 
 #include <iostream>

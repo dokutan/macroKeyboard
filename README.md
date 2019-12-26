@@ -20,7 +20,7 @@ SUBSYSTEM=="usb_device", ATTRS{idVendor}=="VID", ATTRS{idProduct}=="PID", MODE:=
 
 ## Backends
 
-Currently three backends with slightly different features are available. To disable support for a particular backend simply comment out one of the #define statements in macroKeyboard.cpp .
+Currently three backends with slightly different features are available. To disable support for a particular backend simply comment out the appropriate lines in the makefile.
 
 Backend | Dependencies | Notes
 ---|---|---
