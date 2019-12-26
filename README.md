@@ -25,7 +25,7 @@ Currently three backends with slightly different features are available. To disa
 Backend | Dependencies | Notes
 ---|---|---
 hidapi | [hidapi](https://github.com/libusb/hidapi) | does not support "\quit", see Bugs
-libusb | [libusb](https://github.com/libusb/libusb) | supports "\quit"
+libusb | [libusb](https://github.com/libusb/libusb) | supports "\quit", supports single keypress option
 placebo | none | does nothing, only intended for debugging
 
 ## Usage
@@ -50,10 +50,19 @@ To reload the configuration or to create profiles "\load /path/to/configfile" ca
 
 ### Running
 
+Get usage information:
+```
+macroKeyboard -h
+```
+
 WARNING: The specified keyboard can not be used for input while this program is running, so make sure you have a second keyboard attached.
 Start the program with:
 ```
 macroKeyboard -v VID -p PID -m macrofile -b backend
+```
+If you have only one keyboard you can use the option "-s" to quit after a single keypress.
+```
+macroKeyboard -v VID -p PID -m macrofile -b backend -s
 ```
 
 ## Bugs and TODO
@@ -62,4 +71,4 @@ macroKeyboard -v VID -p PID -m macrofile -b backend
 
 - [x] Improve commandline parsing
 - [ ] Add readKeycodes functionality into main program
-- [ ] Add option to quit after a single macro has been executed
+- [x] Add option to quit after a single macro has been executed

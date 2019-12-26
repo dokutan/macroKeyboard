@@ -54,10 +54,11 @@ void print_help(){
 	std::cout << "\t-b=arg\tBackend\n\n";
 	std::cout << "Optional arguments:\n";
 	std::cout << "\t-h\tShow this message\n";
+	std::cout << "\t-s\tQuit after a single keypress on supported backends\n";
 }
 
 // main part
-template<class T> int run_main( T keyboard, std::string VID, std::string PID, std::string macrofile ){
+template<class T> int run_main( T keyboard, std::string VID, std::string PID, std::string macrofile, bool single = false ){
 	
 	// load config
 	if( keyboard.loadMacros( macrofile ) != 0 ){
@@ -67,10 +68,23 @@ template<class T> int run_main( T keyboard, std::string VID, std::string PID, st
 	// open keyboard with VID and PID
 	keyboard.openKeyboard( std::stoi( VID, 0, 16), std::stoi( PID, 0, 16) );
 	
-	// read incoming keys and execute macros		
-	while(1){
+	// read incoming keys and execute macros
+	if( !single ){
+		
+		// run in a loop, don't quit
+		while(1){
+			keyboard.waitForKeypress();
+		}
+		
+	} else{
+		
+		// wait for a single keypress, then quit
 		keyboard.waitForKeypress();
+		keyboard.closeKeyboard();
+		
 	}
+	
+	return 0;
 }
 
 int main(int argc, char* argv[])
@@ -79,8 +93,9 @@ int main(int argc, char* argv[])
 	// parse commandline options
 	int c;
 	std::string vid = "", pid = "", macrofile = "", backend = "";
+	bool single = false;
 	
-	while( ( c = getopt( argc, argv, "p:v:m:b:h") ) != -1 ){
+	while( ( c = getopt( argc, argv, "p:v:m:b:hs") ) != -1 ){
 		
 		switch(c){
 			case 'p':
@@ -98,6 +113,9 @@ int main(int argc, char* argv[])
 			case 'h':
 				print_help();
 				return 0;
+				break;
+			case 's':
+				single = true;
 				break;
 			default:
 				break;
@@ -117,7 +135,7 @@ int main(int argc, char* argv[])
 			
 			#ifdef USE_BACKEND_LIBUSB
 			std::cout << "Using libusb backend\n";
-			run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile );
+			run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, single );
 			#else
 			std::cout << "Using placebo backend\n";
 			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile );
