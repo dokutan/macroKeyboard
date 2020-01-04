@@ -33,6 +33,7 @@ class usbMacros_hidapi{
 	int openKeyboard( int VID, int PID );
 	int closeKeyboard();
 	int waitForKeypress();    //get keypresses and execute macros
+	int waitForKeypressRead();    //get keypresses and print values to stdout
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
 	
@@ -135,6 +136,30 @@ int usbMacros_hidapi::waitForKeypress(){
 		
 		if( key_old == 0 && key_new != 0 ){
 			runMacro( buffer[0], key_new );
+		}
+	}
+	
+	return 0;
+}
+
+int usbMacros_hidapi::waitForKeypressRead(){
+	unsigned char buffer[65];
+	unsigned char key_old=0, key_new=0;
+	
+	while( 1 ){
+		
+		//request keyboard state
+		buffer[1] = 0x81;
+		hid_write(keyboardDevice, buffer, 65);
+
+		//read requested state
+		hid_read(keyboardDevice, buffer, 65);
+		
+		key_old = key_new;
+		key_new = buffer[2];
+		
+		if( key_old == 0 && key_new != 0 ){
+			std::cout << (int) buffer[0] << "\t" << (int) key_new << "\n";
 		}
 	}
 	

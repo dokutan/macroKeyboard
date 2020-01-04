@@ -12,15 +12,11 @@ CFLAGS += -D USE_BACKEND_LIBUSB
 LIBS += -lusb-1.0
 
 build:
-	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS) && \
-	$(CC) readKeycodes.cpp -o readKeycodes -lhidapi-libusb
+	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS)
 
 install:
 	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS) && \
-	$(CC) readKeycodes.cpp -o readKeycodes -lhidapi-libusb && \
-	cp ./macroKeyboard $(BIN_DIR)/macroKeyboard && \
-	cp ./readKeycodes $(BIN_DIR)/readKeycodes
+	cp ./macroKeyboard $(BIN_DIR)/macroKeyboard
 
 clean:
-	rm ./macroKeyboard && \
-	rm ./readKeycodes
+	rm ./macroKeyboard

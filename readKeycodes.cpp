@@ -18,6 +18,7 @@
  * 
  */
 
+// This program has been replaced with macroKeyboard -r
 
 #include <cstdio>
 #include <cstdlib>
