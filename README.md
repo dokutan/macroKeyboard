@@ -34,7 +34,7 @@ placebo | none | does nothing, only intended for debugging
 
 The config file consists of three tab-separated columns. The first column is a number describing the modifiers, the second number is the keycode and the third is the command that will be executed. Lines starting with a number sign '#' are being ignored.  The modifiers and keycodes can be obtained by running
 ```
-readKeycodes VID PID
+macroKeyboard -v VID -p PID -b backend -r
 ```
 To reload the configuration or to create profiles "\load /path/to/configfile" can be used. "\quit" closes the program on supported backends.
 
@@ -70,5 +70,5 @@ macroKeyboard -v VID -p PID -m macrofile -b backend -s
 - Only for the hidapi backend: after this program terminates the keyboard that was opened needs to unplugged and plugged back in for it to work again as a normal keyboard. This is a limitation of the library and I don't intend to fix this, as the libusb backend does not have this limitation.
 
 - [x] Improve commandline parsing
-- [ ] Add readKeycodes functionality into main program
+- [x] Add readKeycodes functionality into main program
 - [x] Add option to quit after a single macro has been executed

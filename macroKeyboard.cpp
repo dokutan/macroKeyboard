@@ -31,12 +31,12 @@
 
 // include backends
 #ifdef USE_BACKEND_LIBUSB
-#include "usbMacro-libusb.cpp"
+#include "backends/usbMacro-libusb.cpp"
 #endif
 #ifdef USE_BACKEND_HIDAPI
-#include "usbMacro-hidapi.cpp"
+#include "backends/usbMacro-hidapi.cpp"
 #endif
-#include "usbMacro-placebo.cpp"
+#include "backends/usbMacro-placebo.cpp"
 
 // compile with:
 // g++ macroKeyboard.cpp -o macroKeyboard -lhidapi-libusb -lusb-1.0
