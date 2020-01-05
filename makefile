@@ -3,15 +3,15 @@
 BIN_DIR = /usr/bin
 CC = g++
 
-# comment out the next two lines to diable the hidapi backend
+# comment out the next two lines to disable the hidapi backend
 CFLAGS += -D USE_BACKEND_HIDAPI
 LIBS += -lhidapi-libusb
 
-# comment out the next two lines to diable the libusb backend
+# comment out the next two lines to disable the libusb backend
 CFLAGS += -D USE_BACKEND_LIBUSB
 LIBS += -lusb-1.0
 
-# comment out the next two lines to diable the libevdev backend
+# comment out the next two lines to disable the libevdev backend
 CFLAGS += -D USE_BACKEND_LIBEVDEV
 LIBS += -levdev
 
