@@ -30,7 +30,7 @@ Backend | Dependencies | Supported devices | Notes
 ---|---|---|---
 hidapi | [hidapi](https://github.com/libusb/hidapi) | Keyboards | does not support "\quit", see Bugs
 libusb | [libusb](https://github.com/libusb/libusb) | Keyboards | supports "\quit", supports single keypress option
-libevdev | [libevdev](https://github.com/libusb/libusb) | any supported as input device by Linux | supports "\quit", supports single keypress option, has different configuration format
+libevdev | [libevdev](https://www.freedesktop.org/software/libevdev/doc/latest/) | any supported as input device by Linux | supports "\quit", supports single keypress option, has different configuration format
 placebo | none | does nothing, only intended for debugging
 
 ## Usage for the libusb and hidapi backends
