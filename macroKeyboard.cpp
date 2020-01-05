@@ -36,6 +36,9 @@
 #ifdef USE_BACKEND_HIDAPI
 #include "backends/usbMacro-hidapi.cpp"
 #endif
+#ifdef USE_BACKEND_LIBEVDEV
+#include "backends/usbMacro-libevdev.cpp"
+#endif
 #include "backends/usbMacro-placebo.cpp"
 
 // compile with:
@@ -48,10 +51,13 @@
 void print_help(){
 	std::cout << "macroKeyboard usage:\n\n";
 	std::cout << "Required arguments:\n";
+	std::cout << "\t-b=arg\tBackend (hidapi, libusb, libevdev, placebo)\n";
+	std::cout << "\t-m=arg\tMacrofile (not required when using -r)\n\n";
+	std::cout << "Required arguments for the hidapi and libusb backends:\n";
 	std::cout << "\t-p=arg\tKeyboard PID\n";
-	std::cout << "\t-v=arg\tKeyboard VID\n";
-	std::cout << "\t-m=arg\tMacrofile (not required when using -r)\n";
-	std::cout << "\t-b=arg\tBackend\n\n";
+	std::cout << "\t-v=arg\tKeyboard VID\n\n";
+	std::cout << "Required arguments for libevdev backend:\n";
+	std::cout << "\t-e=arg\tEvent file\n\n";
 	std::cout << "Optional arguments:\n";
 	std::cout << "\t-r\tRead keycodes\n";
 	std::cout << "\t-h\tShow this message\n";
@@ -110,16 +116,72 @@ template<class T> int run_main( T keyboard, std::string VID, std::string PID, st
 	return 0;
 }
 
+// main part for libevdev
+int run_main_libevdev( std::string eventfile, std::string macrofile, bool read, bool single = false ){
+	
+	usbMacros_libevdev keyboard;
+	
+	if( !read ){ // normal mode: execute macros on keypress
+		// load config
+		if( keyboard.loadMacros( macrofile ) != 0 ){
+			return 1;
+		}
+		
+		// open keyboard
+		keyboard.openKeyboard( eventfile );
+		
+		// read incoming keys and execute macros
+		if( !single ){
+			
+			// run in a loop, don't quit
+			while(1){
+				keyboard.waitForKeypress();
+				//std::cout << "a\n";
+			}
+			
+		} else{
+			
+			// wait for a single keypress, then quit
+			while( keyboard.waitForKeypress() != 0 )
+				;
+			//keyboard.waitForKeypress();
+			keyboard.closeKeyboard();
+			
+		}
+	} else{ // read mode: print keycodes to stdout
+		
+		// open keyboard
+		keyboard.openKeyboard( eventfile );
+		
+		// read incoming keys and print keycodes
+		if( !single ){
+			
+			std::cout << "Press Ctrl+C to quit\n";
+			
+			while(1){
+				keyboard.waitForKeypressRead();
+			}
+			
+		} else{
+			keyboard.waitForKeypressRead();
+			keyboard.closeKeyboard();
+		}
+		
+	}
+		
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	
 	// parse commandline options
 	int c;
-	std::string vid = "", pid = "", macrofile = "", backend = "";
+	std::string vid = "", pid = "", macrofile = "", backend = "", eventfile = "";
 	bool single = false;
 	bool read = false;
 	
-	while( ( c = getopt( argc, argv, "p:v:m:b:hsr") ) != -1 ){
+	while( ( c = getopt( argc, argv, "p:v:m:b:hsre:") ) != -1 ){
 		
 		switch(c){
 			case 'p':
@@ -144,46 +206,65 @@ int main(int argc, char* argv[])
 			case 'r':
 				read = true;
 				break;
+			case 'e':
+				eventfile = optarg;
+				break;
 			default:
 				break;
 		}
 		
 	}
 	
-	if( vid == "" || pid == "" || ( macrofile == "" && !read) || backend == "" ){
+	// check for correct arguments
+	if( backend == "" ){
+		std::cout << "Required arguments missing\n";
+		return 0;
+	}
+	if( (backend == "libusb" || backend == "hidapi") && (vid == "" || pid == "") ){
+		std::cout << "Required arguments missing\n";
+		return 0;
+	}
+	if( macrofile == "" && !read ){
 		std::cout << "Required arguments missing\n";
 		return 0;
 	}
 	
 	// determine backend, select correct main class
-	if( argc >= 5 ){
+	if( backend == "libusb" ){
 		
-		if( backend == "libusb" ){
-			
-			#ifdef USE_BACKEND_LIBUSB
-			std::cout << "Using libusb backend\n";
-			run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, read, single );
-			#else
-			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
-			#endif
-			
-		} else if( backend == "hidapi" ){
-			
-			#ifdef USE_BACKEND_HIDAPI
-			std::cout << "Using hidapi backend\n";
-			run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile, read );
-			#else
-			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
-			#endif
-			
-		} else{
-			
-			std::cout << "Using placebo backend\n";
-			run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
-			
-		}
+		#ifdef USE_BACKEND_LIBUSB
+		std::cout << "Using libusb backend\n";
+		run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, read, single );
+		#else
+		std::cout << "Using placebo backend\n";
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		#endif
+		
+	} else if( backend == "hidapi" ){
+		
+		#ifdef USE_BACKEND_HIDAPI
+		std::cout << "Using hidapi backend\n";
+		run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile, read );
+		#else
+		std::cout << "Using placebo backend\n";
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		#endif
+		
+	} else if( backend == "libevdev" ){
+		
+		#ifdef USE_BACKEND_LIBEVDEV
+		std::cout << "Using libevdev backend\n";
+		run_main_libevdev( eventfile, macrofile, read, single );
+		#else
+		std::cout << "Using placebo backend\n";
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		#endif
+		
+	} else{
+		
+		std::cout << "Using placebo backend\n";
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		
 	}
 	
 	return 0;
