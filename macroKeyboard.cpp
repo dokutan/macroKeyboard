@@ -27,7 +27,8 @@
 
 #include <iostream>
 #include <string>
-#include <unistd.h>
+#include <exception>
+#include <unistd.h> // for getopt
 
 // include backends
 #ifdef USE_BACKEND_LIBUSB
@@ -51,7 +52,6 @@
 void print_help(){
 	std::cout << "macroKeyboard usage:\n\n";
 	std::cout << "Required arguments:\n";
-	//std::cout << "\t-b=arg\tBackend (hidapi, libusb, libevdev, placebo)\n";
 	std::cout << "\t-b=arg\tBackend (placebo";
 	
 	#ifdef USE_BACKEND_LIBUSB
@@ -80,50 +80,54 @@ void print_help(){
 // main part
 template<class T> int run_main( T keyboard, std::string VID, std::string PID, std::string macrofile, bool read, bool single = false ){
 	
-	if( !read ){ // normal mode: execute macros on keypress
-		// load config
-		if( keyboard.loadMacros( macrofile ) != 0 ){
-			return 1;
-		}
-		
-		// open keyboard with VID and PID
-		keyboard.openKeyboard( std::stoi( VID, 0, 16), std::stoi( PID, 0, 16) );
-		
-		// read incoming keys and execute macros
-		if( !single ){
+	try{
+		if( !read ){ // normal mode: execute macros on keypress
+			// load config
+			if( keyboard.loadMacros( macrofile ) != 0 ){
+				return 1;
+			}
 			
-			// run in a loop, don't quit
-			while(1){
+			// open keyboard with VID and PID
+			keyboard.openKeyboard( std::stoi( VID, 0, 16), std::stoi( PID, 0, 16) );
+			
+			// read incoming keys and execute macros
+			if( !single ){
+				
+				// run in a loop, don't quit
+				while(1){
+					keyboard.waitForKeypress();
+				}
+				
+			} else{
+				
+				// wait for a single keypress, then quit
 				keyboard.waitForKeypress();
+				keyboard.closeKeyboard();
+				
 			}
+		} else{ // read mode: print keycodes to stdout
 			
-		} else{
+			// open keyboard with VID and PID
+			keyboard.openKeyboard( std::stoi( VID, 0, 16), std::stoi( PID, 0, 16) );
 			
-			// wait for a single keypress, then quit
-			keyboard.waitForKeypress();
-			keyboard.closeKeyboard();
-			
-		}
-	} else{ // read mode: print keycodes to stdout
-		
-		// open keyboard with VID and PID
-		keyboard.openKeyboard( std::stoi( VID, 0, 16), std::stoi( PID, 0, 16) );
-		
-		// read incoming keys and print keycodes
-		if( !single ){
-			
-			std::cout << "Press Ctrl+C to quit\n";
-			std::cout << "Depending on the backend you might have to replug the device after this\n";
-			
-			while(1){
+			// read incoming keys and print keycodes
+			if( !single ){
+				
+				std::cout << "Press Ctrl+C to quit\n";
+				std::cout << "Depending on the backend you might have to replug the device after this\n";
+				
+				while(1){
+					keyboard.waitForKeypressRead();
+				}
+				
+			} else{
 				keyboard.waitForKeypressRead();
+				keyboard.closeKeyboard();
 			}
 			
-		} else{
-			keyboard.waitForKeypressRead();
-			keyboard.closeKeyboard();
 		}
-		
+	} catch( std::exception &e ){
+		std::cout << "An exception occured: " << e.what() << "\n";
 	}
 		
 	return 0;
@@ -132,54 +136,58 @@ template<class T> int run_main( T keyboard, std::string VID, std::string PID, st
 // main part for libevdev
 int run_main_libevdev( std::string eventfile, std::string macrofile, bool read, bool single = false ){
 	
-	usbMacros_libevdev keyboard;
-	
-	if( !read ){ // normal mode: execute macros on keypress
-		// load config
-		if( keyboard.loadMacros( macrofile ) != 0 ){
-			return 1;
-		}
+	try{
+		usbMacros_libevdev keyboard;
 		
-		// open keyboard
-		keyboard.openKeyboard( eventfile );
-		
-		// read incoming keys and execute macros
-		if( !single ){
-			
-			// run in a loop, don't quit
-			while(1){
-				keyboard.waitForKeypress();
-				//std::cout << "a\n";
+		if( !read ){ // normal mode: execute macros on keypress
+			// load config
+			if( keyboard.loadMacros( macrofile ) != 0 ){
+				return 1;
 			}
 			
-		} else{
+			// open keyboard
+			keyboard.openKeyboard( eventfile );
 			
-			// wait for a single keypress, then quit
-			while( keyboard.waitForKeypress() != 0 )
-				;
-			//keyboard.waitForKeypress();
-			keyboard.closeKeyboard();
+			// read incoming keys and execute macros
+			if( !single ){
+				
+				// run in a loop, don't quit
+				while(1){
+					keyboard.waitForKeypress();
+					//std::cout << "a\n";
+				}
+				
+			} else{
+				
+				// wait for a single keypress, then quit
+				while( keyboard.waitForKeypress() != 0 )
+					;
+				//keyboard.waitForKeypress();
+				keyboard.closeKeyboard();
+				
+			}
+		} else{ // read mode: print keycodes to stdout
 			
-		}
-	} else{ // read mode: print keycodes to stdout
-		
-		// open keyboard
-		keyboard.openKeyboard( eventfile );
-		
-		// read incoming keys and print keycodes
-		if( !single ){
+			// open keyboard
+			keyboard.openKeyboard( eventfile );
 			
-			std::cout << "Press Ctrl+C to quit\n";
-			
-			while(1){
+			// read incoming keys and print keycodes
+			if( !single ){
+				
+				std::cout << "Press Ctrl+C to quit\n";
+				
+				while(1){
+					keyboard.waitForKeypressRead();
+				}
+				
+			} else{
 				keyboard.waitForKeypressRead();
+				keyboard.closeKeyboard();
 			}
 			
-		} else{
-			keyboard.waitForKeypressRead();
-			keyboard.closeKeyboard();
 		}
-		
+	} catch( std::exception &e ){
+		std::cout << "An exception occured: " << e.what() << "\n";
 	}
 		
 	return 0;
@@ -230,15 +238,28 @@ int main(int argc, char* argv[])
 	
 	// check for correct arguments
 	if( backend == "" ){
-		std::cout << "Required arguments missing\n";
+		std::cout << "Required arguments missing: -b <backend>\n";
+		std::cout << "Run macroKeyboard -h for help.\n";
 		return 0;
 	}
-	if( (backend == "libusb" || backend == "hidapi") && (vid == "" || pid == "") ){
-		std::cout << "Required arguments missing\n";
+	if( (backend == "libusb" || backend == "hidapi") && (vid == "") ){
+		std::cout << "Required arguments missing: -v <vid>\n";
+		std::cout << "Run macroKeyboard -h for help.\n";
+		return 0;
+	}
+	if( (backend == "libusb" || backend == "hidapi") && (pid == "") ){
+		std::cout << "Required arguments missing: -p <pid>\n";
+		std::cout << "Run macroKeyboard -h for help.\n";
+		return 0;
+	}
+	if( (backend == "libevdev") && (eventfile == "") ){
+		std::cout << "Required arguments missing: -e <eventfile>\n";
+		std::cout << "Run macroKeyboard -h for help.\n";
 		return 0;
 	}
 	if( macrofile == "" && !read ){
-		std::cout << "Required arguments missing\n";
+		std::cout << "Required arguments missing: -m <macrofile>\n";
+		std::cout << "Run macroKeyboard -h for help.\n";
 		return 0;
 	}
 	
@@ -249,7 +270,7 @@ int main(int argc, char* argv[])
 		std::cout << "Using libusb backend\n";
 		run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, read, single );
 		#else
-		std::cout << "Using placebo backend\n";
+		std::cout << "Backend libusb is disabled, using placebo backend\n";
 		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
 		#endif
 		
@@ -259,7 +280,7 @@ int main(int argc, char* argv[])
 		std::cout << "Using hidapi backend\n";
 		run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile, read );
 		#else
-		std::cout << "Using placebo backend\n";
+		std::cout << "Backend hidapi is disabled, using placebo backend\n";
 		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
 		#endif
 		
@@ -269,7 +290,7 @@ int main(int argc, char* argv[])
 		std::cout << "Using libevdev backend\n";
 		run_main_libevdev( eventfile, macrofile, read, single );
 		#else
-		std::cout << "Using placebo backend\n";
+		std::cout << "Backend libevdev is disabled, using placebo backend\n";
 		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
 		#endif
 		

@@ -108,4 +108,4 @@ In contrast to the other backends, using the -s option only quits after a succes
 - [x] Add readKeycodes functionality into main program
 - [x] Add option to quit after a single macro has been executed
 - [x] Show dynamic list of backends in help message
-- [ ] Improve error handling
+- [x] Improve error handling
