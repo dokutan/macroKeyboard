@@ -51,7 +51,20 @@
 void print_help(){
 	std::cout << "macroKeyboard usage:\n\n";
 	std::cout << "Required arguments:\n";
-	std::cout << "\t-b=arg\tBackend (hidapi, libusb, libevdev, placebo)\n";
+	//std::cout << "\t-b=arg\tBackend (hidapi, libusb, libevdev, placebo)\n";
+	std::cout << "\t-b=arg\tBackend (placebo";
+	
+	#ifdef USE_BACKEND_LIBUSB
+	std::cout << ", libusb";
+	#endif
+	#ifdef USE_BACKEND_LIBEVDEV
+	std::cout << ", libevdev";
+	#endif
+	#ifdef USE_BACKEND_HIDAPI
+	std::cout << ", hidapi";
+	#endif
+	
+	std::cout << ")\n";
 	std::cout << "\t-m=arg\tMacrofile (not required when using -r)\n\n";
 	std::cout << "Required arguments for the hidapi and libusb backends:\n";
 	std::cout << "\t-p=arg\tKeyboard PID\n";
