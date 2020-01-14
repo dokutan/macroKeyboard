@@ -69,6 +69,10 @@ The option "-s" can be used to quit after a single keypress.
 ```
 macroKeyboard -v VID -p PID -m macrofile -b backend -s
 ```
+The option "-f" can be used to run the program in the background.
+```
+macroKeyboard -v VID -p PID -m macrofile -b backend -f
+```
 
 ## Usage for the libevdev backend
 
