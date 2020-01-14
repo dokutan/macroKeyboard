@@ -1,5 +1,5 @@
 # macroKeyboard
-Turns a Keyboard or any other input device into a dedicated macro device. Has only been tested on Linux but should work cross-platform with the correct backends.
+Turns a keyboard or any other input device into a dedicated macro device. Has only been tested on Linux but should work cross-platform with the correct backends.
 
 ## Installing
 
