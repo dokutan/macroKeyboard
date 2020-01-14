@@ -75,6 +75,7 @@ void print_help(){
 	std::cout << "\t-r\tRead keycodes\n";
 	std::cout << "\t-h\tShow this message\n";
 	std::cout << "\t-s\tQuit after a single keypress on supported backends\n";
+	std::cout << "\t-f\tRun in the background\n";
 }
 
 // main part
@@ -201,8 +202,9 @@ int main(int argc, char* argv[])
 	std::string vid = "", pid = "", macrofile = "", backend = "", eventfile = "";
 	bool single = false;
 	bool read = false;
+	bool use_fork = false;
 	
-	while( ( c = getopt( argc, argv, "p:v:m:b:hsre:") ) != -1 ){
+	while( ( c = getopt( argc, argv, "p:v:m:b:hsre:f") ) != -1 ){
 		
 		switch(c){
 			case 'p':
@@ -230,6 +232,8 @@ int main(int argc, char* argv[])
 			case 'e':
 				eventfile = optarg;
 				break;
+			case 'f':
+				use_fork = true;
 			default:
 				break;
 		}
@@ -262,6 +266,23 @@ int main(int argc, char* argv[])
 		std::cout << "Run macroKeyboard -h for help.\n";
 		return 0;
 	}
+	
+	
+	// fork (run in background) ?
+	if( use_fork ){
+		// create child process
+		pid_t process_id = fork();
+		
+		// close file descriptors
+		close(0); // cin
+		close(1); // cout
+		close(2); // cerr
+		
+		// quit if not child process
+		if( process_id != 0 )
+			return 0;
+	}
+	
 	
 	// determine backend, select correct main class
 	if( backend == "libusb" ){
