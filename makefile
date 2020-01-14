@@ -19,7 +19,7 @@ build:
 	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS) -Wall
 
 install:
-	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS) && \
+	$(CC) $(CFLAGS) macroKeyboard.cpp -o macroKeyboard $(LIBS) -Wall && \
 	cp ./macroKeyboard $(BIN_DIR)/macroKeyboard
 
 clean:
