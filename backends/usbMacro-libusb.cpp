@@ -32,7 +32,7 @@ class usbMacros_libusb{
 	
 	int openKeyboard( int VID, int PID );
 	int closeKeyboard();
-	int waitForKeypress();    //get keypresses and execute macros
+	int waitForKeypress( bool print_codes );    //get keypresses and execute macros
 	int waitForKeypressRead();    //get keypresses and print values to stdout
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
@@ -122,7 +122,7 @@ int usbMacros_libusb::runMacro( unsigned char keycode, unsigned char modifiers )
 	return 0;
 }
 
-int usbMacros_libusb::waitForKeypress(){
+int usbMacros_libusb::waitForKeypress( bool print_codes ){
 	uint8_t buffer[8];
 	unsigned char key_old=0, key_new=0;
 	int transferred;
@@ -134,10 +134,9 @@ int usbMacros_libusb::waitForKeypress(){
 	key_new = buffer[2];
 	
 	if( key_old == 0 && key_new != 0 ){
+		if( print_codes ) std::cout << (int)buffer[0] << "\t" << (int)buffer[2] << "\n";
 		runMacro( buffer[0], buffer[2] );
-		//std::cout << (int)buffer[0] << "\t" << (int)buffer[2] << "\n";
 	}
-	
 	
 	return 0;
 }

@@ -79,10 +79,11 @@ void print_help(){
 }
 
 // main part
-template<class T> int run_main( T keyboard, std::string VID, std::string PID, std::string macrofile, bool read, bool single = false ){
+template<class T> int run_main( T keyboard, std::string VID, std::string PID,
+std::string macrofile, bool flag_macrofile, bool read, bool single = false ){
 	
 	try{
-		if( !read ){ // normal mode: execute macros on keypress
+		if( flag_macrofile ){ // normal mode: execute macros on keypress
 			// load config
 			if( keyboard.loadMacros( macrofile ) != 0 ){
 				return 1;
@@ -96,13 +97,13 @@ template<class T> int run_main( T keyboard, std::string VID, std::string PID, st
 				
 				// run in a loop, don't quit
 				while(1){
-					keyboard.waitForKeypress();
+					keyboard.waitForKeypress( read );
 				}
 				
 			} else{
 				
 				// wait for a single keypress, then quit
-				keyboard.waitForKeypress();
+				keyboard.waitForKeypress( read );
 				keyboard.closeKeyboard();
 				
 			}
@@ -135,12 +136,13 @@ template<class T> int run_main( T keyboard, std::string VID, std::string PID, st
 }
 
 // main part for libevdev
-int run_main_libevdev( std::string eventfile, std::string macrofile, bool read, bool single = false ){
+int run_main_libevdev( std::string eventfile, std::string macrofile,
+bool flag_macrofile, bool read, bool single = false ){
 	
 	try{
 		usbMacros_libevdev keyboard;
 		
-		if( !read ){ // normal mode: execute macros on keypress
+		if( flag_macrofile ){ // normal mode: execute macros on keypress
 			// load config
 			if( keyboard.loadMacros( macrofile ) != 0 ){
 				return 1;
@@ -154,14 +156,13 @@ int run_main_libevdev( std::string eventfile, std::string macrofile, bool read, 
 				
 				// run in a loop, don't quit
 				while(1){
-					keyboard.waitForKeypress();
-					//std::cout << "a\n";
+					keyboard.waitForKeypress( read );
 				}
 				
 			} else{
 				
 				// wait for a single keypress, then quit
-				while( keyboard.waitForKeypress() != 0 )
+				while( keyboard.waitForKeypress( read ) != 0 )
 					;
 				//keyboard.waitForKeypress();
 				keyboard.closeKeyboard();
@@ -203,6 +204,7 @@ int main(int argc, char* argv[])
 	bool single = false;
 	bool read = false;
 	bool use_fork = false;
+	bool flag_macrofile = false;
 	
 	while( ( c = getopt( argc, argv, "p:v:m:b:hsre:f") ) != -1 ){
 		
@@ -215,6 +217,7 @@ int main(int argc, char* argv[])
 				break;
 			case 'm':
 				macrofile = optarg;
+				flag_macrofile = true;
 				break;
 			case 'b':
 				backend = optarg;
@@ -289,36 +292,36 @@ int main(int argc, char* argv[])
 		
 		#ifdef USE_BACKEND_LIBUSB
 		std::cout << "Using libusb backend\n";
-		run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, read, single );
+		run_main<usbMacros_libusb>( usbMacros_libusb(), vid, pid, macrofile, flag_macrofile, read, single );
 		#else
 		std::cout << "Backend libusb is disabled, using placebo backend\n";
-		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, flag_macrofile, read );
 		#endif
 		
 	} else if( backend == "hidapi" ){
 		
 		#ifdef USE_BACKEND_HIDAPI
 		std::cout << "Using hidapi backend\n";
-		run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile, read );
+		run_main<usbMacros_hidapi>( usbMacros_hidapi(), vid, pid, macrofile, flag_macrofile, read );
 		#else
 		std::cout << "Backend hidapi is disabled, using placebo backend\n";
-		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, flag_macrofile, read );
 		#endif
 		
 	} else if( backend == "libevdev" ){
 		
 		#ifdef USE_BACKEND_LIBEVDEV
 		std::cout << "Using libevdev backend\n";
-		run_main_libevdev( eventfile, macrofile, read, single );
+		run_main_libevdev( eventfile, macrofile, flag_macrofile, read, single );
 		#else
 		std::cout << "Backend libevdev is disabled, using placebo backend\n";
-		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, flag_macrofile, read );
 		#endif
 		
 	} else{
 		
 		std::cout << "Using placebo backend\n";
-		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, read );
+		run_main<usbMacros_placebo>( usbMacros_placebo(), vid, pid, macrofile, flag_macrofile, read );
 		
 	}
 	

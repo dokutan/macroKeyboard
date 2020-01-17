@@ -33,7 +33,7 @@ class usbMacros_placebo{
 	
 	int openKeyboard( int VID, int PID );
 	int closeKeyboard();
-	int waitForKeypress();    //get keypresses and execute macros
+	int waitForKeypress( bool print_codes );    //get keypresses and execute macros
 	int waitForKeypressRead();    //get keypresses and print values to stdout
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
@@ -52,7 +52,7 @@ int usbMacros_placebo::runMacro( unsigned char keycode, unsigned char modifiers 
 	return 0;
 }
 
-int usbMacros_placebo::waitForKeypress(){
+int usbMacros_placebo::waitForKeypress( bool print_codes ){
 	
 	while( 1 ){
 	
