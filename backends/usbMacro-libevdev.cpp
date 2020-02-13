@@ -1,9 +1,6 @@
 /*
- * usbMacro-placebo.cpp
- * 
- * This backend does nothing and is intended as a template and for
- * testing purposes only.
- * 
+ * usbMacro-libevdev.cpp
+ *  
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -135,7 +132,9 @@ int usbMacros_libevdev::waitForKeypress( bool print_codes ){
 	struct input_event event;
 	
 	// wait for change in /dev/input/event* (no timeout)
-	poll(pollfds,1,-1);
+	if( libevdev_has_event_pending( device ) == 0 ){
+		poll(pollfds,1,-1);
+	}
 	
 	if( libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &event) == 0 ){
 		if( print_codes ) std::cout << event.type << "\t" << event.code << "\t" << event.value << "\n";
@@ -150,7 +149,9 @@ int usbMacros_libevdev::waitForKeypressRead(){
 	struct input_event event;
 	
 	// wait for change in /dev/input/event* (no timeout)
-	poll(pollfds,1,-1);
+	if( libevdev_has_event_pending( device ) == 0 ){
+		poll(pollfds,1,-1);
+	}
 	
 	if( libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &event) == 0 ){
 		std::cout << event.type << "\t"	<< event.code << "\t"	<< event.value << "\n";
