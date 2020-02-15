@@ -39,6 +39,7 @@ class usbMacros_libevdev{
 	int closeKeyboard();
 	int waitForKeypress( bool print_codes);    //get keypresses and execute macros
 	int waitForKeypressRead();    //get keypresses and print values to stdout
+	int waitForKeypress( std::array<unsigned int, 3>& event );    //overloaded function for the lua interface
 	int runMacro( int type, int code, int value );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
 	
@@ -158,6 +159,26 @@ int usbMacros_libevdev::waitForKeypressRead(){
 	}
 
 	return 0;
+}
+
+int usbMacros_libevdev::waitForKeypress( std::array<unsigned int, 3>& event ){
+	
+	struct input_event _event;
+	
+	// wait for change in /dev/input/event* (no timeout)
+	if( libevdev_has_event_pending( device ) == 0 ){
+		poll(pollfds,1,-1);
+	}
+	
+	if( libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &_event) == 0 ){
+		//std::cout << event.type << "\t"	<< event.code << "\t"	<< event.value << "\n";
+		event[0] = _event.type;
+		event[1] = _event.code;
+		event[2] = _event.value;
+		return 0;
+	}
+
+	return 1;
 }
 
 int usbMacros_libevdev::openKeyboard( std::string eventfile ){
