@@ -22,6 +22,10 @@ SUBSYSTEM=="usb_device", ATTRS{idVendor}=="VID", ATTRS{idProduct}=="PID", MODE:=
   - Add your user to the relevant group with `sudo usermod -a -G group user`
 - Running this program as root is strongly discouraged as all macros are executed with root privileges which is a major security risk.
 
+## Lua interface
+
+A version with a lua interface is available in the lua-config directory, this needs to be installed separately by running make install from that directory. For the configuration look at lua-config/example.lua .
+
 ## Backends
 
 Currently four backends with slightly different features are available. To disable support for a particular backend simply comment out the appropriate lines in the makefile.
