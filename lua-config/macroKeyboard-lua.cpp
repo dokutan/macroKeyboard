@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <exception>
 #include <getopt.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -190,7 +191,67 @@ int main(int argc, char* argv[]){
 		std::string device_pid = lua_tostring( L, -1 );
 		lua_remove( L, -1 );  // remove top value from stack
 		
-		// run main
+		// keyboard object
+		usbMacros_libusb kbd;
+		
+		// convert vid and pid to int
+		int vid = 0, pid = 0;
+		try{
+			vid = std::stoi(device_vid, 0, 16);
+			pid = std::stoi(device_pid, 0, 16);
+		} catch( std::exception &e ){
+			std::cout << "Exception caught: " << e.what() << "\n";
+			lua_close( L );
+			return 1;
+		}
+		
+		// open keyboard
+		if( kbd.openKeyboard( vid, pid ) != 0 ){
+			std::cout << "An error occured: couldn't open keyboard\n";
+			lua_close(L);
+			return 1;
+		}
+		
+		// wait for events and run lua function input_handler
+		std::array<unsigned int, 2> event;
+		std::string input_handler_return;
+		while( 1 ){
+			
+			// wait for successfull event
+			if( kbd.waitForKeypress( event ) == 0 ){
+				
+				// push function input_handler and arguments onto the stack
+				lua_getglobal( L, "input_handler" ); // load function onto stack
+				lua_pushinteger( L, event[0] ); // push first argument 
+				lua_pushinteger( L, event[1] ); // push second argument
+				
+				// call lua function input_handler
+				if( lua_pcall( L, 2, 1, 0 ) != 0 ){
+					std::cout << "An error occured: " << lua_tostring( L, -1 ) << "\n";
+					lua_remove( L, -1 );  // remove top value from stack
+					kbd.closeKeyboard();
+					lua_close(L);
+					return 1;
+				}
+				
+				// get return value from input_handler
+				if( lua_isstring( L, -1 ) ){
+					input_handler_return = lua_tostring( L, -1 );
+					
+					// quit program if requested from lua
+					if( input_handler_return == "quit" ){
+						kbd.closeKeyboard();
+						break;
+					}
+					
+				}
+				
+				// remove return value from input_handler from stack
+				lua_remove( L, -1 );
+				
+				// stackDump(L);
+			}
+		}
 		
 		#else
 		std::cout << "Backend libusb is not enabled.\n";
@@ -227,7 +288,67 @@ int main(int argc, char* argv[]){
 		std::string device_pid = lua_tostring( L, -1 );
 		lua_remove( L, -1 );  // remove top value from stack
 		
-		// run main
+		// keyboard object
+		usbMacros_hidapi kbd;
+		
+		// convert vid and pid to int
+		int vid = 0, pid = 0;
+		try{
+			vid = std::stoi(device_vid, 0, 16);
+			pid = std::stoi(device_pid, 0, 16);
+		} catch( std::exception &e ){
+			std::cout << "Exception caught: " << e.what() << "\n";
+			lua_close( L );
+			return 1;
+		}
+		
+		// open keyboard
+		if( kbd.openKeyboard( vid, pid ) != 0 ){
+			std::cout << "An error occured: couldn't open keyboard\n";
+			lua_close(L);
+			return 1;
+		}
+		
+		// wait for events and run lua function input_handler
+		std::array<unsigned int, 2> event;
+		std::string input_handler_return;
+		while( 1 ){
+			
+			// wait for successfull event
+			if( kbd.waitForKeypress( event ) == 0 ){
+				
+				// push function input_handler and arguments onto the stack
+				lua_getglobal( L, "input_handler" ); // load function onto stack
+				lua_pushinteger( L, event[0] ); // push first argument 
+				lua_pushinteger( L, event[1] ); // push second argument
+				
+				// call lua function input_handler
+				if( lua_pcall( L, 2, 1, 0 ) != 0 ){
+					std::cout << "An error occured: " << lua_tostring( L, -1 ) << "\n";
+					lua_remove( L, -1 );  // remove top value from stack
+					kbd.closeKeyboard();
+					lua_close(L);
+					return 1;
+				}
+				
+				// get return value from input_handler
+				if( lua_isstring( L, -1 ) ){
+					input_handler_return = lua_tostring( L, -1 );
+					
+					// quit program if requested from lua
+					if( input_handler_return == "quit" ){
+						kbd.closeKeyboard();
+						break;
+					}
+					
+				}
+				
+				// remove return value from input_handler from stack
+				lua_remove( L, -1 );
+				
+				// stackDump(L);
+			}
+		}
 		
 		#else
 		std::cout << "Backend hidapi is not enabled.\n";

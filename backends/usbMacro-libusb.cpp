@@ -34,6 +34,7 @@ class usbMacros_libusb{
 	int closeKeyboard();
 	int waitForKeypress( bool print_codes );    //get keypresses and execute macros
 	int waitForKeypressRead();    //get keypresses and print values to stdout
+	int waitForKeypress( std::array<unsigned int, 2>& event );    //overloaded function for the lua interface
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
 	
@@ -156,6 +157,33 @@ int usbMacros_libusb::waitForKeypressRead(){
 		std::cout << (int)buffer[0] << "\t" << (int)buffer[2] << "\n";
 	}
 	
+	
+	return 0;
+}
+
+// read keypress (for lua interface)
+int usbMacros_libusb::waitForKeypress( std::array<unsigned int, 2>& event ){
+	
+	uint8_t buffer[8];
+	unsigned char key_old=0, key_new=0;
+	int transferred;
+	
+	while( 1 ){
+		
+		//read from endpoint 1
+		libusb_interrupt_transfer( keyboardDevice, 0x81, buffer, 8, &transferred, -1);;
+		
+		key_old = key_new;
+		key_new = buffer[2];
+		
+		if( key_old == 0 && key_new != 0 ){
+			//std::cout << (int)buffer[0] << "\t" << (int)buffer[2] << "\n";
+			event[0] = buffer[0];
+			event[1] = buffer[2];
+			break;
+		}
+		
+	}
 	
 	return 0;
 }

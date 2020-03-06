@@ -34,6 +34,7 @@ class usbMacros_hidapi{
 	int closeKeyboard();
 	int waitForKeypress( bool print_codes );    //get keypresses and execute macros
 	int waitForKeypressRead();    //get keypresses and print values to stdout
+	int waitForKeypress( std::array<unsigned int, 2>& event );    //overloaded function for the lua interface
 	int runMacro( unsigned char keycode, unsigned char modifiers );    //execute macro
 	int loadMacros( std::string configFile );    //load macros from config file
 	
@@ -161,6 +162,35 @@ int usbMacros_hidapi::waitForKeypressRead(){
 		
 		if( key_old == 0 && key_new != 0 ){
 			std::cout << (int) buffer[0] << "\t" << (int) key_new << "\n";
+		}
+	}
+	
+	return 0;
+}
+
+// read keypress (for lua interface)
+int usbMacros_hidapi::waitForKeypress( std::array<unsigned int, 2>& event ){
+	
+	unsigned char buffer[65];
+	unsigned char key_old=0, key_new=0;
+	
+	while( 1 ){
+		
+		//request keyboard state
+		buffer[1] = 0x81;
+		hid_write(keyboardDevice, buffer, 65);
+
+		//read requested state
+		hid_read(keyboardDevice, buffer, 65);
+		
+		key_old = key_new;
+		key_new = buffer[2];
+		
+		if( key_old == 0 && key_new != 0 ){
+			//std::cout << (int) buffer[0] << "\t" << (int) key_new << "\n";
+			event[0] = buffer[0];
+			event[1] = key_new;
+			break;
 		}
 	}
 	

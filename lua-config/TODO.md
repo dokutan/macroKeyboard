@@ -1,12 +1,12 @@
-- [ ] add support in backends
-	- [ ] libusb
+- [x] add support in backends
+	- [x] libusb
 	- [x] libevdev
-	- [ ] hidapi
+	- [x] hidapi
 
-- [ ] "run main" code
-	- [ ] libusb
+- [x] "run main" code
+	- [x] libusb
 	- [x] libevdev
-	- [ ] hidapi
+	- [x] hidapi
 
 - [x] expose system() to lua ( os.execute() standard lua function )
 
