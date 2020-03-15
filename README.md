@@ -1,4 +1,6 @@
 # macroKeyboard
+**This program is no longer under development, due to various reasons a [rewrite](https://github.com/dokutan/macrodevice) has been started. Once the rewrite reaches sufficient stability and features, this repository will be archived.**
+
 Turns a keyboard or any other input device into a dedicated macro device. Has only been tested on Linux but should work cross-platform with the correct backends.
 
 ## Installing
